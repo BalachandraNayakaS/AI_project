@@ -1,0 +1,9 @@
+from app.routers.analytics import router as analytics
+from app.routers.auth import router as auth
+from app.routers.chatbot import router as chatbot
+from app.routers.customers import router as customers
+from app.routers.recommendations import router as recommendations
+from app.routers.reports import router as reports
+from app.routers.sales import router as sales
+from app.routers.sentiment import router as sentiment
+from app.routers.support import router as support
