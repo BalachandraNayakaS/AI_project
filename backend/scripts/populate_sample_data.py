@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 
 HOST = '127.0.0.1'
-PORT = 8001
+PORT = 8000
 
 ADMIN = {'username': 'ui_test_user', 'password': 'Password123!'}
 
@@ -47,8 +47,13 @@ def get(path, token=None):
 # login
 status, body = post('/api/auth/login', ADMIN)
 if status != 200:
-    print('Login failed', status, body)
-    raise SystemExit(1)
+    print('Login failed, registering user first...')
+    reg_user = {'username': 'ui_test_user', 'password': 'Password123!', 'email': 'ui_test@example.com', 'role': 'admin'}
+    post('/api/auth/register', reg_user)
+    status, body = post('/api/auth/login', ADMIN)
+    if status != 200:
+        print('Login still failed:', status, body)
+        raise SystemExit(1)
 
 token = json.loads(body)['access_token']
 print('Logged in, token length:', len(token))

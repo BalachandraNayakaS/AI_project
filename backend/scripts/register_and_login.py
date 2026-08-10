@@ -2,7 +2,7 @@ import http.client
 import json
 
 HOST = '127.0.0.1'
-PORT = 8001
+PORT = 8000
 
 def post(path, data):
     conn = http.client.HTTPConnection(HOST, PORT, timeout=10)

@@ -14,5 +14,5 @@ def chat(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_active_user),
 ):
-    response = generate_chat_response(payload)
+    response = generate_chat_response(payload, db=db)
     return {"response": response["response"]}

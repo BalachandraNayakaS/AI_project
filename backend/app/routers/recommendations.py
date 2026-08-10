@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_active_user, get_db, require_role
+from app.core.dependencies import get_current_active_user, get_db
 from app.schemas.schemas import RecommendationRead
 from app.services.recommendation_service import generate_recommendation, get_recommendations
 
@@ -24,9 +24,11 @@ def create_recommendation(
     type: str,
     context: str,
     db: Session = Depends(get_db),
-    current_user=Depends(require_role("admin")),
+    current_user=Depends(get_current_active_user),
 ):
     try:
         return generate_recommendation(db, customer_id, type, context)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))

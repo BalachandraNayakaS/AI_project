@@ -1,0 +1,15 @@
+frontend/node_modules/
+frontend/dist/
+
+__pycache__/
+*.py[cod]
+
+.env
+.env.*
+backend/.env
+
+*.db
+*.sqlite
+*.sqlite3
+
+backend/app/uploads/*

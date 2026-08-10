@@ -12,7 +12,7 @@ if ROOT not in sys.path:
 from time import sleep
 
 HOST = '127.0.0.1'
-PORT = 8001
+PORT = 8000
 
 # helper http functions
 def request(method, path, data=None, token=None):
@@ -80,18 +80,33 @@ if admin_token:
         print('Generate recommendation for', cust['id'], '=>', status)
         sleep(0.1)
 
-# Insert lead scores directly using DB session
+# Insert lead scores & sentiments directly using DB session
 try:
     from app.core.database import SessionLocal
-    from app.models.models import LeadScore
+    from app.models.models import LeadScore, Sentiment
     db = SessionLocal()
     for cust in customers[:5]:
         score = LeadScore(customer_id=cust['id'], score=round(random.uniform(40, 95),2), probability=round(random.uniform(0.1,0.99),2), recommended_action='Follow up with tailored offer')
         db.add(score)
+    
+    # Add sentiments
+    sentiments_sample = [
+        ('positive', 0.95, 'Outstanding service and quick response time!'),
+        ('positive', 0.88, 'Great software experience for our team.'),
+        ('neutral', 0.65, 'Average resolution time, feature request submitted.'),
+        ('positive', 0.92, 'Copilot insights helped close 3 new deals!'),
+        ('negative', 0.78, 'Encountered minor sync issue on dashboard.'),
+        ('positive', 0.90, 'Highly recommended for B2B analytics.'),
+    ]
+    for i, cust in enumerate(customers[:5]):
+        s_val, conf, rev = sentiments_sample[i % len(sentiments_sample)]
+        sentiment_obj = Sentiment(customer_id=cust['id'], review=rev, sentiment=s_val, confidence=conf)
+        db.add(sentiment_obj)
+
     db.commit()
-    print('Inserted lead scores into DB')
+    print('Inserted lead scores & sentiments into DB')
     db.close()
 except Exception as exc:
-    print('Failed to write lead scores directly:', exc)
+    print('Failed to write lead scores/sentiments directly:', exc)
 
 print('Done')

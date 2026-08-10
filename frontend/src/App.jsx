@@ -7,12 +7,12 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <AppRoutes />
-        </Router>
-        <Toaster position="top-right" />
-      </AuthProvider>
+          <Toaster position="top-right" />
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   )
 }
