@@ -1,9 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiBell, FiCpu, FiMoon, FiSearch, FiSun, FiUser, FiX } from 'react-icons/fi'
+import {
+  FiBell,
+  FiCheckCircle,
+  FiCpu,
+  FiDollarSign,
+  FiHelpCircle,
+  FiMoon,
+  FiSearch,
+  FiSun,
+  FiTrendingUp,
+  FiUser,
+  FiX,
+  FiCheck,
+} from 'react-icons/fi'
 import useTheme from '../../hooks/useTheme'
 import useAuth from '../../hooks/useAuth'
 import customerService from '../../services/customerService'
+import notificationService from '../../services/notificationService'
 
 const PLATFORM_PAGES = [
   { name: 'Dashboard', path: '/', desc: 'Overview of business metrics, sales & tickets' },
@@ -27,6 +41,21 @@ export default function Navbar() {
   const [matchingCustomers, setMatchingCustomers] = useState([])
   const [searchingCust, setSearchingCust] = useState(false)
   const searchRef = useRef(null)
+
+  // Notification States
+  const [showNotifs, setShowNotifs] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const notifRef = useRef(null)
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    notificationService.getNotifications().then((data) => {
+      setNotifications(data || [])
+    })
+  }, [])
+
+  // Compute unread count
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   // Filter pages based on query
   const filteredPages = PLATFORM_PAGES.filter(
@@ -55,11 +84,14 @@ export default function Navbar() {
     return () => clearTimeout(timer)
   }, [query])
 
-  // Close dropdown on click outside
+  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsOpen(false)
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifs(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -85,14 +117,41 @@ export default function Navbar() {
     navigate('/chatbot', { state: { initialPrompt: prompt } })
   }
 
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }
+
+  const handleSelectNotif = (notif) => {
+    setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)))
+    setShowNotifs(false)
+    if (notif.link) {
+      navigate(notif.link)
+    }
+  }
+
+  const getNotifIcon = (type) => {
+    switch (type) {
+      case 'lead':
+        return <FiTrendingUp className="h-4 w-4 text-emerald-600" />
+      case 'ticket':
+        return <FiHelpCircle className="h-4 w-4 text-amber-600" />
+      case 'recommendation':
+        return <FiCpu className="h-4 w-4 text-indigo-600" />
+      case 'sales':
+        return <FiDollarSign className="h-4 w-4 text-sky-600" />
+      default:
+        return <FiCheckCircle className="h-4 w-4 text-slate-600" />
+    }
+  }
+
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition-colors duration-300">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
         
         {/* Search Bar Container */}
         <div ref={searchRef} className="relative w-full max-w-md">
           <div className="relative flex items-center">
-            <div className="pointer-events-none absolute left-3.5 text-slate-400">
+            <div className="pointer-events-none absolute left-3.5 text-slate-400 dark:text-slate-500">
               <FiSearch className="h-4 w-4" />
             </div>
             <input
@@ -104,7 +163,7 @@ export default function Navbar() {
               }}
               onFocus={() => setIsOpen(true)}
               placeholder="Search platform, customers, sales or ask AI..."
-              className="w-full rounded-3xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-full border border-slate-200/90 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/90 py-2.5 pl-10 pr-10 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition focus:border-indigo-500 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-indigo-500/10"
             />
             {query && (
               <button
@@ -113,7 +172,7 @@ export default function Navbar() {
                   setQuery('')
                   setMatchingCustomers([])
                 }}
-                className="absolute right-3.5 text-slate-400 hover:text-slate-600"
+                className="absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <FiX className="h-4 w-4" />
               </button>
@@ -198,6 +257,7 @@ export default function Navbar() {
 
         {/* Right Header Navigation Icons */}
         <div className="flex items-center gap-3">
+          {/* Dark Mode Toggle */}
           <button
             type="button"
             className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200"
@@ -207,14 +267,100 @@ export default function Navbar() {
             {darkMode ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
           </button>
 
-          <button
-            type="button"
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200"
-            aria-label="Notifications"
-          >
-            <FiBell className="h-5 w-5" />
-          </button>
+          {/* Notifications Dropdown Container */}
+          <div ref={notifRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setShowNotifs((prev) => !prev)}
+              className="relative grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 focus:outline-none"
+              aria-label="Notifications"
+            >
+              <FiBell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-bold text-white shadow-sm ring-2 ring-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
 
+            {/* Notification Popover Drawer */}
+            {showNotifs && (
+              <div className="absolute right-0 top-full mt-3 w-80 sm:w-96 rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl z-50">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-slate-900">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-600">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                    >
+                      <FiCheck className="h-3.5 w-3.5" /> Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {/* Notifications List */}
+                <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+                  {notifications.length === 0 ? (
+                    <p className="py-6 text-center text-xs text-slate-400">No notifications available</p>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => handleSelectNotif(n)}
+                        className={`group flex cursor-pointer gap-3 rounded-2xl p-3 transition ${
+                          n.read ? 'bg-white hover:bg-slate-50' : 'bg-indigo-50/60 hover:bg-indigo-50'
+                        }`}
+                      >
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white shadow-sm border border-slate-100">
+                          {getNotifIcon(n.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className={`text-xs font-semibold truncate ${n.read ? 'text-slate-700' : 'text-slate-900'}`}>
+                              {n.title}
+                            </p>
+                            <span className="text-[10px] text-slate-400 shrink-0">{n.timestamp}</span>
+                          </div>
+                          <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{n.message}</p>
+                          <div className="mt-1.5 flex items-center justify-between">
+                            <span className="text-[10px] font-medium text-indigo-600 uppercase tracking-wider">
+                              {n.category}
+                            </span>
+                            {!n.read && (
+                              <span className="h-2 w-2 rounded-full bg-indigo-600"></span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="mt-3 border-t border-slate-100 pt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNotifs(false)
+                      navigate('/settings')
+                    }}
+                    className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                  >
+                    Notification Settings →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* User Profile Menu */}
           <div className="flex items-center gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-2 shadow-sm">
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-indigo-50 text-indigo-600">
               <FiUser className="h-5 w-5" />

@@ -50,9 +50,27 @@ export default function ReportsPage() {
     }
   }
 
-  const handleDownload = (reportId) => {
-    const downloadUrl = reportService.getDownloadUrl(reportId)
-    window.open(downloadUrl, '_blank')
+  const handleDownload = async (report) => {
+    const toastId = toast.loading('Preparing report download...')
+    try {
+      const response = await reportService.downloadReport(report.id)
+      const contentType = response.headers['content-type'] || 'text/plain'
+      const blob = new Blob([response.data], { type: contentType })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const safeTitle = report.title ? report.title.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() : `report_${report.id}`
+      link.setAttribute('download', `${safeTitle}.txt`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Report downloaded successfully!', { id: toastId })
+    } catch (err) {
+      const detail = err.response?.data?.detail
+      const msg = typeof detail === 'string' ? detail : 'Failed to download report.'
+      toast.error(msg, { id: toastId })
+    }
   }
 
   return (
@@ -157,7 +175,7 @@ export default function ReportsPage() {
 
                   <button
                     type="button"
-                    onClick={() => handleDownload(item.id)}
+                    onClick={() => handleDownload(item)}
                     className="inline-flex items-center gap-2 shrink-0 rounded-2xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
                   >
                     <FiDownload className="h-4 w-4" />

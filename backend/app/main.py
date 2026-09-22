@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.routers import analytics, auth, chatbot, customers, recommendations, reports, sales, sentiment, support
+from app.routers import analytics, auth, chatbot, customers, notifications, recommendations, reports, sales, sentiment, support
 
 
 def create_app() -> FastAPI:
@@ -44,6 +44,15 @@ def create_app() -> FastAPI:
     app.include_router(sentiment, prefix=settings.API_PREFIX)
     app.include_router(recommendations, prefix=settings.API_PREFIX)
     app.include_router(reports, prefix=settings.API_PREFIX)
+    app.include_router(notifications, prefix=settings.API_PREFIX)
+
+    @app.get("/")
+    def home() -> dict[str, str]:
+        return {"message": "AI Business Copilot Backend Running"}
+
+    @app.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "Healthy"}
 
     return app
 
@@ -59,12 +68,3 @@ def startup_event() -> None:
     except Exception as exc:  # pragma: no cover - defensive startup handling
         logging.warning("Database unavailable at startup, continuing without DB: %s", exc)
 
-
-@app.get("/")
-def home() -> dict[str, str]:
-    return {"message": "AI Business Copilot Backend Running"}
-
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "Healthy"}

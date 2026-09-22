@@ -16,7 +16,7 @@ def get_sale(db: Session, sale_id: int):
 
 
 def create_new_sale(db: Session, sale_in: SaleCreate):
-    sale_data = sale_in.model_dump()
+    sale_data = {k: v for k, v in sale_in.model_dump().items() if v is not None}
     return create_sale(db, sale_data)
 
 

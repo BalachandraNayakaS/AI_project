@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -75,7 +75,7 @@ class SaleBase(BaseModel):
     product: str = Field(..., max_length=100)
     amount: float
     quantity: int = Field(..., ge=1)
-    sales_date: datetime
+    sales_date: Optional[datetime] = None
 
 
 class SaleCreate(SaleBase):
@@ -185,5 +185,17 @@ class DashboardResponse(BaseModel):
     satisfaction: Optional[float] = None
     lead_conversion: Optional[float] = None
     monthly_sales: List[float] = []
-    sentiment: List[Dict[str, float]] = []
-    lead_scores: List[Dict[str, float]] = []
+    sentiment: List[Dict[str, Any]] = []
+    lead_scores: List[Dict[str, Any]] = []
+
+
+class NotificationRead(BaseModel):
+    id: str
+    title: str
+    message: str
+    type: str  # lead, ticket, sales, recommendation, system
+    category: str
+    read: bool = False
+    timestamp: str
+    link: Optional[str] = None
+

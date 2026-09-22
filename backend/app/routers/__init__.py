@@ -2,6 +2,7 @@ from app.routers.analytics import router as analytics
 from app.routers.auth import router as auth
 from app.routers.chatbot import router as chatbot
 from app.routers.customers import router as customers
+from app.routers.notifications import router as notifications
 from app.routers.recommendations import router as recommendations
 from app.routers.reports import router as reports
 from app.routers.sales import router as sales

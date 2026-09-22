@@ -11,5 +11,10 @@ backend/.env
 *.db
 *.sqlite
 *.sqlite3
+*.log
+uvicorn_start.log
 
 backend/app/uploads/*
+!backend/app/uploads/.gitkeep
+.vscode/
+.idea/

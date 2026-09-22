@@ -39,12 +39,13 @@ def get_dashboard_metrics(db: Session) -> DashboardResponse:
         or 0
     )
 
-    sentiment_totals = db.scalars(
+    sentiment_totals = db.execute(
         select(Sentiment.sentiment, func.count().label("count")).group_by(Sentiment.sentiment)
-    ).all()
+    ).tuples().all()
     sentiment_counts = defaultdict(int)
     for sentiment_value, count in sentiment_totals:
-        sentiment_counts[sentiment_value.lower()] += count
+        if sentiment_value:
+            sentiment_counts[str(sentiment_value).lower()] += count
 
     total_sentiments = sum(sentiment_counts.values())
     if total_sentiments == 0:

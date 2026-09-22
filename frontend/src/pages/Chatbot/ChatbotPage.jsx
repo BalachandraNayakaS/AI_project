@@ -16,7 +16,7 @@ function FormatMarkdown({ text }) {
 
         // Bullet point lines
         if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
-          const content = trimmed.replace(/^[•\-\*]\s*/, '')
+          const content = trimmed.replace(/^[•\-*]\s*/, '')
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-2 my-1">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
